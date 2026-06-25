@@ -1,0 +1,99 @@
+{
+  "marketplaces": {
+    "UAE": {
+      "currency": "AED",
+      "default_stock": 1000,
+      "vat_rate": 0.05,
+      "commission_rate": 0.15,
+      "domestic_shipping_cny": 3.0,
+      "first_leg_cny": 8.0,
+      "exchange_rate_cny_to_local": 0.51,
+      "target_margin_rate": 0.28,
+      "promo_buffer_rate": 0.08,
+      "minimum_margin_rate": 0.22
+    },
+    "KSA": {
+      "currency": "SAR",
+      "default_stock": 1000,
+      "vat_rate": 0.15,
+      "commission_rate": 0.15,
+      "domestic_shipping_cny": 3.0,
+      "first_leg_cny": 10.0,
+      "exchange_rate_cny_to_local": 0.52,
+      "target_margin_rate": 0.28,
+      "promo_buffer_rate": 0.08,
+      "minimum_margin_rate": 0.22
+    }
+  },
+  "sku": {
+    "prefix": "NW",
+    "category_code_default": "EL",
+    "sequence_start": 1
+  },
+  "collector": {
+    "timeout_seconds": 30,
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36",
+    "cookie_env": "ALI1688_COOKIE",
+    "max_images": 12
+  },
+  "ai": {
+    "enabled": false,
+    "base_url": "https://api.openai.com/v1",
+    "api_key_env": "OPENAI_API_KEY",
+    "model": "gpt-4.1-mini",
+    "timeout_seconds": 90
+  },
+  "images": {
+    "canvas_size": 1200,
+    "suite_count": 5,
+    "make_white_background": true,
+    "make_scene_cards": true,
+    "publish_dir": "",
+    "public_base_url": ""
+  },
+  "noon": {
+    "credentials_path": "../api.json",
+    "api_base_url": "https://noon-api-gateway.noon.partners",
+    "probe_endpoints": [
+      "/identity/v1/whoami",
+      "/content/v1/categories/list"
+    ],
+    "seller_lab_url": "https://catalog.noon.partners/en-ae/catalog?limits=20&page=1",
+    "template_dir": "templates",
+    "default_category_sync_mode": "all",
+    "electronics_families": [
+      "electronic_accessories",
+      "audio_video",
+      "camera",
+      "video_games",
+      "laptops",
+      "mobiles",
+      "home_appliances"
+    ],
+    "electronics_extra_category_keywords": [
+      "lighting",
+      "smart",
+      "power",
+      "charger",
+      "cable",
+      "adapter"
+    ]
+  },
+  "validation": {
+    "blocked_terms": [
+      "apple",
+      "samsung",
+      "xiaomi",
+      "huawei",
+      "dyson",
+      "philips",
+      "sony",
+      "medical",
+      "cure",
+      "guaranteed"
+    ],
+    "auto_submit_min_score": 0.86,
+    "require_manual_for_battery": true,
+    "require_manual_for_wireless": true
+  }
+}

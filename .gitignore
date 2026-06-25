@@ -1,0 +1,38 @@
+# Local configuration and credentials
+config.local.json
+.env
+.env.*
+api.json
+*.pem
+*.key
+
+# Generated runtime artifacts
+runs/
+manual_pages/
+assets/
+downloads/
+exports/
+
+# Synced marketplace metadata generated from external APIs
+templates/content_api/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Local business input/output files
+*.xlsx
+*.xls
+*.xlsm
+*.csv
