@@ -1,5 +1,6 @@
 # Local configuration and credentials
 config.local.json
+desktop.local.json
 .env
 .env.*
 api.json
@@ -12,6 +13,8 @@ manual_pages/
 assets/
 downloads/
 exports/
+build/
+dist/
 
 # Synced marketplace metadata generated from external APIs
 templates/content_api/

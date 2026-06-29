@@ -71,9 +71,10 @@ class RuleContentGenerator:
 
 
 class OpenAICompatibleGenerator:
-    def __init__(self, cfg: dict[str, Any]):
+    def __init__(self, cfg: dict[str, Any], urlopen=urllib.request.urlopen):
         self.cfg = cfg
         self.fallback = RuleContentGenerator()
+        self.urlopen = urlopen
 
     def enabled(self) -> bool:
         return bool(self.cfg.get("enabled")) and bool(os.environ.get(self.cfg.get("api_key_env", "OPENAI_API_KEY")))
@@ -138,7 +139,7 @@ class OpenAICompatibleGenerator:
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
             method="POST",
         )
-        with urllib.request.urlopen(request, timeout=int(self.cfg.get("timeout_seconds", 90))) as response:
+        with self.urlopen(request, timeout=int(self.cfg.get("timeout_seconds", 90))) as response:
             return json.loads(response.read().decode("utf-8"))
 
     def _parse(self, payload: dict[str, Any], product: SourceProduct, category: CategoryMatch) -> ListingContent:
@@ -157,3 +158,63 @@ class OpenAICompatibleGenerator:
             content_score=float(data.get("content_score") or 0.75),
             generator="ai",
         )
+
+
+class GeminiNativeGenerator(OpenAICompatibleGenerator):
+    def _request(self, prompt: str) -> dict[str, Any]:
+        model = self.cfg.get("model", "gemini-3-flash-preview")
+        base_url = str(self.cfg.get("base_url", "https://generativelanguage.googleapis.com/v1beta")).rstrip("/")
+        url = f"{base_url}/models/{model}:generateContent"
+        api_key = os.environ[self.cfg.get("api_key_env", "GEMINI_API_KEY")]
+        body = {
+            "contents": [
+                {
+                    "parts": [
+                        {
+                            "text": (
+                                "You are an ecommerce listing data generator. "
+                                "Output strict JSON only.\n\n"
+                                f"{prompt}"
+                            )
+                        }
+                    ]
+                }
+            ],
+            "generationConfig": {
+                "temperature": 0.2,
+                "responseMimeType": "application/json",
+            },
+        }
+        data = json.dumps(body, ensure_ascii=False).encode("utf-8")
+        request = urllib.request.Request(
+            url,
+            data=data,
+            headers={"X-goog-api-key": api_key, "Content-Type": "application/json"},
+            method="POST",
+        )
+        with self.urlopen(request, timeout=int(self.cfg.get("timeout_seconds", 90))) as response:
+            return json.loads(response.read().decode("utf-8"))
+
+    def _parse(self, payload: dict[str, Any], product: SourceProduct, category: CategoryMatch) -> ListingContent:
+        text = payload["candidates"][0]["content"]["parts"][0]["text"]
+        data = json.loads(text)
+        fallback = self.fallback.generate(product, category)
+        return ListingContent(
+            title_en=data.get("title_en") or fallback.title_en,
+            title_ar=data.get("title_ar") or "",
+            bullets_en=list(data.get("bullets_en") or fallback.bullets_en)[:5],
+            bullets_ar=list(data.get("bullets_ar") or [])[:5],
+            description_en=data.get("description_en") or fallback.description_en,
+            description_ar=data.get("description_ar") or "",
+            search_keywords=list(data.get("search_keywords") or fallback.search_keywords)[:20],
+            attributes=dict(fallback.attributes | dict(data.get("attributes") or {})),
+            content_score=float(data.get("content_score") or 0.75),
+            generator="gemini_native",
+        )
+
+
+def make_content_generator(cfg: dict[str, Any]):
+    provider = str(cfg.get("provider", "openai_compatible")).lower()
+    if provider == "gemini_native":
+        return GeminiNativeGenerator(cfg)
+    return OpenAICompatibleGenerator(cfg)

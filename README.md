@@ -7,12 +7,13 @@ The tool currently supports:
 - 1688 product collection with anti-bot detection
 - saved HTML ingestion for browser-verified 1688 pages
 - product normalization and category classification
-- rule-based listing generation with optional OpenAI-compatible AI generation
+- rule-based listing generation with optional OpenAI-compatible or native Gemini AI generation
 - image suite generation for local review
 - UAE/KSA price and virtual stock calculation
 - Noon bulk workbook/CSV export
 - Noon Content API category/attribute sync
 - Noon Content API upsert and GetContent status checks
+- Windows desktop GUI for bulk pasted 1688 URLs and Excel URL import
 
 ## Status
 
@@ -49,6 +50,35 @@ Sensitive values should be supplied outside Git:
 - 1688 cookie, if needed: set `ALI1688_COOKIE`
 
 `config.local.json`, `.env*`, `api.json`, run outputs, and spreadsheets are ignored by Git.
+
+## Desktop GUI
+
+Start the desktop app from source:
+
+```powershell
+python desktop_app.py
+```
+
+In the app:
+
+- paste only the Gemini API key, not the full curl command
+- select the Noon `api.json` credential file if you want API probing or live submission
+- paste the 1688 cookie only if 1688 blocks public collection
+- keep auto-submit off until generated files have been reviewed
+
+The desktop app saves local settings to `%APPDATA%\NoonListingTool\desktop.local.json`.
+
+Build the Windows EXE:
+
+```powershell
+.\scripts\build_exe.ps1
+```
+
+The output will be:
+
+```text
+dist\NoonListingTool\NoonListingTool.exe
+```
 
 ## Basic Usage
 
@@ -142,7 +172,7 @@ To enable OpenAI-compatible generation:
 2. Set `OPENAI_API_KEY`.
 3. Configure `ai.base_url` and `ai.model` if using a compatible provider.
 
-Gemini can be used through Google's OpenAI-compatible endpoint. For local Gemini 3 Flash configuration:
+Gemini can be used through Google's native `generateContent` endpoint. For local Gemini 3 Flash configuration:
 
 ```powershell
 Copy-Item config.gemini.example.json config.local.json
@@ -156,7 +186,8 @@ The Gemini example config uses:
 {
   "ai": {
     "enabled": true,
-    "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+    "provider": "gemini_native",
+    "base_url": "https://generativelanguage.googleapis.com/v1beta",
     "api_key_env": "GEMINI_API_KEY",
     "model": "gemini-3-flash-preview"
   }

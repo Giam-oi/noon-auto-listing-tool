@@ -6,7 +6,7 @@ from typing import Any
 from .categories import ElectronicsClassifier
 from .collectors import Ali1688Collector
 from .config import runs_root
-from .content import OpenAICompatibleGenerator
+from .content import make_content_generator
 from .content_submit import build_payloads_for_run
 from .excel_input import read_products_from_excel
 from .exporters import export_all
@@ -29,7 +29,7 @@ class ListingPipeline:
         if not template_dir.is_absolute():
             template_dir = Path(__file__).resolve().parents[2] / template_dir
         self.classifier = ElectronicsClassifier(template_dir)
-        self.generator = OpenAICompatibleGenerator(cfg.get("ai", {}))
+        self.generator = make_content_generator(cfg.get("ai", {}))
 
     def collect_1688(self, url: str) -> SourceProduct:
         collector = Ali1688Collector(self.cfg.get("collector", {}))
