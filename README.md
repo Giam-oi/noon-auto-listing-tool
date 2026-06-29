@@ -25,7 +25,7 @@ Do not commit credentials, business spreadsheets, generated runs, or downloaded 
 - Python 3.11+
 - Noon partner API credentials
 - Network access to Noon APIs
-- Optional: OpenAI-compatible API key for AI-generated listing content
+- Optional: OpenAI-compatible API key for AI-generated listing content, including Gemini
 
 Install dependencies:
 
@@ -45,6 +45,7 @@ Sensitive values should be supplied outside Git:
 
 - Noon credentials: pass with `--credentials path\to\api.json`
 - OpenAI key: set `OPENAI_API_KEY`
+- Gemini key: set `GEMINI_API_KEY`
 - 1688 cookie, if needed: set `ALI1688_COOKIE`
 
 `config.local.json`, `.env*`, `api.json`, run outputs, and spreadsheets are ignored by Git.
@@ -140,6 +141,29 @@ To enable OpenAI-compatible generation:
 1. Set `ai.enabled` to `true` in `config.local.json`.
 2. Set `OPENAI_API_KEY`.
 3. Configure `ai.base_url` and `ai.model` if using a compatible provider.
+
+Gemini can be used through Google's OpenAI-compatible endpoint. For local Gemini 3 Flash configuration:
+
+```powershell
+Copy-Item config.gemini.example.json config.local.json
+$env:GEMINI_API_KEY="your-gemini-api-key"
+python run.py sample --config config.local.json
+```
+
+The Gemini example config uses:
+
+```json
+{
+  "ai": {
+    "enabled": true,
+    "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+    "api_key_env": "GEMINI_API_KEY",
+    "model": "gemini-3-flash-preview"
+  }
+}
+```
+
+Do not commit real API keys. If the Gemini API rejects the preview model name, change `ai.model` to the currently enabled Flash model for your API key.
 
 ## Image Publishing
 
