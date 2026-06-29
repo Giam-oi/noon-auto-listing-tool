@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import unittest
 from typing import Any
+from pathlib import Path
+import json
+import tempfile
 
 from noon_listing.batch import BatchRunner
 
@@ -76,6 +79,44 @@ class BatchRunnerTest(unittest.TestCase):
         self.assertEqual(result.failed, 0)
         self.assertEqual(result.needs_review, 1)
         self.assertEqual(result.items[0].status, "needs_review")
+
+    def test_runner_adds_validation_issue_summary_for_needs_review(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = Path(temp)
+            (run_dir / "validation_report.json").write_text(
+                json.dumps(
+                    {
+                        "drafts": [
+                            {
+                                "issues": [
+                                    {"severity": "error", "code": "missing_images", "message": "No images found."},
+                                    {"severity": "error", "code": "missing_cost", "message": "CNY cost price is missing."},
+                                ]
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            class Pipeline:
+                def build_from_1688_url(self, url: str) -> dict[str, Any]:
+                    return {"run_dir": str(run_dir), "total_products": 1, "submit_ready": 0}
+
+            result = BatchRunner(Pipeline()).run_urls(["https://detail.1688.com/offer/111.html"])
+
+        self.assertEqual(result.items[0].status, "needs_review")
+        self.assertIn("missing_images", result.items[0].error)
+        self.assertIn("missing_cost", result.items[0].error)
+
+    def test_runner_reports_running_progress_message(self) -> None:
+        events = []
+        runner = BatchRunner(_FakePipeline())
+
+        runner.run_urls(["https://detail.1688.com/offer/111.html"], progress_callback=events.append)
+
+        self.assertEqual(events[0].status, "running")
+        self.assertEqual(events[0].error, "Collecting product data")
 
 
 if __name__ == "__main__":

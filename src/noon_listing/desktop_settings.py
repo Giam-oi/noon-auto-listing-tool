@@ -24,6 +24,10 @@ def default_desktop_settings_path() -> Path:
     return Path.home() / ".noon_listing_tool" / "desktop.local.json"
 
 
+def default_desktop_log_dir() -> Path:
+    return default_desktop_settings_path().parent / "logs"
+
+
 def load_desktop_settings(path: str | Path) -> DesktopSettings:
     settings_path = Path(path)
     if not settings_path.exists():

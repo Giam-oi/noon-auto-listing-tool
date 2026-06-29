@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -57,6 +58,40 @@ class BatchRunner:
             return self.pipeline()
         return self.pipeline
 
+    def _emit(self, item: BatchItem, progress_callback: Callable[[BatchItem], None] | None) -> None:
+        if progress_callback:
+            progress_callback(
+                BatchItem(
+                    source=item.source,
+                    status=item.status,
+                    run_dir=item.run_dir,
+                    error=item.error,
+                    summary=dict(item.summary),
+                )
+            )
+
+    def _validation_issue_summary(self, run_dir: str) -> str:
+        if not run_dir:
+            return ""
+        path = Path(run_dir) / "validation_report.json"
+        if not path.exists():
+            return ""
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return ""
+        issues: list[str] = []
+        for draft in data.get("drafts", []):
+            for issue in draft.get("issues", []):
+                if issue.get("severity") == "error":
+                    code = str(issue.get("code") or "").strip()
+                    message = str(issue.get("message") or "").strip()
+                    if code and message:
+                        issues.append(f"{code}: {message}")
+                    elif code:
+                        issues.append(code)
+        return "; ".join(issues[:5])
+
     def run_urls(
         self,
         urls: list[str],
@@ -64,26 +99,26 @@ class BatchRunner:
     ) -> BatchResult:
         result = BatchResult(total=len(urls))
         for url in urls:
-            item = BatchItem(source=url, status="running")
-            if progress_callback:
-                progress_callback(item)
+            item = BatchItem(source=url, status="running", error="Collecting product data")
+            self._emit(item, progress_callback)
             try:
                 summary = self._pipeline_for_item().build_from_1688_url(url)
                 item.summary = dict(summary)
                 item.run_dir = str(summary.get("run_dir", ""))
                 if int(summary.get("submit_ready") or 0) > 0:
                     item.status = "succeeded"
+                    item.error = ""
                     result.succeeded += 1
                 else:
                     item.status = "needs_review"
+                    item.error = self._validation_issue_summary(item.run_dir)
                     result.needs_review += 1
             except Exception as exc:
                 item.status = "failed"
                 item.error = str(exc)
                 result.failed += 1
             result.items.append(item)
-            if progress_callback:
-                progress_callback(item)
+            self._emit(item, progress_callback)
         return result
 
 

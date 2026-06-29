@@ -8,6 +8,7 @@ from pathlib import Path
 from noon_listing.desktop_settings import (
     DesktopSettings,
     apply_settings_to_environment,
+    default_desktop_log_dir,
     load_desktop_settings,
     save_desktop_settings,
     settings_to_config_override,
@@ -65,6 +66,12 @@ class DesktopSettingsTest(unittest.TestCase):
         self.assertNotIn("secret-key", repr(override))
         self.assertEqual(override["marketplaces"]["UAE"]["default_stock"], 321)
         self.assertEqual(override["marketplaces"]["KSA"]["default_stock"], 321)
+
+    def test_default_log_dir_is_under_desktop_app_data(self) -> None:
+        log_dir = default_desktop_log_dir()
+
+        self.assertEqual(log_dir.name, "logs")
+        self.assertEqual(log_dir.parent.name, "NoonListingTool")
 
 
 if __name__ == "__main__":
