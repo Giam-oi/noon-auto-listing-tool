@@ -1,12 +1,23 @@
 from __future__ import annotations
 
 import json
+import sys
 from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
 
-DEFAULT_CONFIG_PATH = Path(__file__).resolve().parents[2] / "config.example.json"
+def project_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def resource_root() -> Path:
+    if getattr(sys, "frozen", False) and getattr(sys, "_MEIPASS", ""):
+        return Path(sys._MEIPASS)
+    return project_root()
+
+
+DEFAULT_CONFIG_PATH = resource_root() / "config.example.json"
 
 
 def load_json(path: str | Path) -> dict[str, Any]:
@@ -29,10 +40,6 @@ def load_config(path: str | Path | None = None) -> dict[str, Any]:
     if path:
         config = deep_merge(config, load_json(path))
     return config
-
-
-def project_root() -> Path:
-    return Path(__file__).resolve().parents[2]
 
 
 def workspace_root() -> Path:

@@ -5,7 +5,7 @@ from typing import Any
 
 from .categories import ElectronicsClassifier
 from .collectors import Ali1688Collector
-from .config import runs_root
+from .config import resource_root, runs_root
 from .content import make_content_generator
 from .content_submit import build_payloads_for_run
 from .excel_input import read_products_from_excel
@@ -27,7 +27,7 @@ class ListingPipeline:
         self.run_dir = run_dir or make_run_dir(runs_root(), "listing")
         template_dir = Path(cfg.get("noon", {}).get("template_dir", "templates"))
         if not template_dir.is_absolute():
-            template_dir = Path(__file__).resolve().parents[2] / template_dir
+            template_dir = resource_root() / template_dir
         self.classifier = ElectronicsClassifier(template_dir)
         self.generator = make_content_generator(cfg.get("ai", {}))
 
